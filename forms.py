@@ -104,11 +104,11 @@ def initializeApp():
 def currentData():
     conn = sqlite3.connect('example.db')
     c = conn.cursor()
-    response = "<html><table border='1'> <tr>    <td>firstPatientName</td><td>patientStartDate</td><td>lastPatientName</td><td>patientEndDate</td><td>workStartTime</td><td>workEndTime</td> <td>duration</td>  </tr>"
+    response = "<html><table border='1'> <tr>  <td>id</td>  <td>firstPatientName</td><td>patientStartDate</td><td>lastPatientName</td><td>patientEndDate</td><td>workStartTime</td><td>workEndTime</td> <td>duration</td>  </tr>"
     print "going to run query"
 
     for row in c.execute(
-            "SELECT firstPatientName, patientStartDate, lastPatientName, patientEndDate, startTime, endTime,(julianday(endTime) - julianday(startTime))*1000 FROM TIMESHEET order by id"):
+            "SELECT id,firstPatientName, patientStartDate, lastPatientName, patientEndDate, startTime, endTime,Cast((JulianDay(endTime) - JulianDay(startTime)) * 24 * 60 As Integer) FROM TIMESHEET order by id"):
         print row
         response = response + "<tr> <td>" + '</td><td>'.join(map(str,row)) + "</tr>"
 
@@ -117,23 +117,17 @@ def currentData():
 
     return response
 
-
-@app.route("/reportData", methods=['GET'])
-def reportData():
+@app.route("/delete/<recordId>", methods=['GET'])
+def deleteData(recordId):
     conn = sqlite3.connect('example.db')
     c = conn.cursor()
-    response = "<html><table border='1'> <tr>    <td>day</td><td>TotalHours</td>   </tr>"
-    print "going to run query"
 
-    for row in c.execute(
-            "SELECT firstPatientName, patientStartDate, lastPatientName, patientEndDate, startTime, endTime FROM TIMESHEET order by id"):
-        print row
-        response = response + "<tr> <td>" + '</td><td>'.join(row) + "</tr>"
-
-    response = response + "</table></html>"
+    c.execute( "DELETE FROM TIMESHEET where id=?",recordId)
+    conn.commit()
     conn.close()
 
-    return response
+    return "success"
+
 
 
 if __name__ == "__main__":
